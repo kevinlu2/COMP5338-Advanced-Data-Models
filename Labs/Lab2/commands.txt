@@ -1,0 +1,63 @@
+# Import json commands:
+
+mongoimport --jsonArray --db wikipedia --collection revisions --file Donald_Trump2016-07-01.json
+mongoimport --jsonArray --db wikipedia --collection revisions --file Hillary_Clinton2016-07-01.json
+mongoimport --jsonArray --db wikipedia --collection users --file users.json
+
+# Queries in Question 3
+
+ db.revisions.find({}).count()
+ db.users.find({}).count()
+
+ #question 3.1
+
+   db.users.find({gender:'female'})
+
+ #question 3.2
+
+   db.revisions.distinct('user')
+
+ #question 3.3 
+
+   db.users.find().sort({editcount:-1}).limit(5)
+
+ #question 3.4
+
+   db.users.find({name: {$regex: '^((?!bot).)*$', $options: 'si' }})
+	.sort({editcount:-1}).limit(5)
+
+# Question 4
+ db.revisions.updateMany({user:"BD2412"}, 
+{$set:{"userprofile": {
+				"editcount" : 775871,
+				"gender" : "male",
+				"userid" : 196446,
+				"name" : "BD2412",
+				"registration" : ISODate("2005-02-20T18:14:10Z")
+    } }})
+
+
+ # updating Yobot's revision documents
+
+ db.revisions.updateMany({user:"Yobot"}, 
+{$set:{"userprofile": {
+    "_id" : ObjectId("5d4287810c84336545f9b6fd"),
+    "editcount" : 4494744,
+    "gender" : "unknown",
+    "userid" : 7328338,
+    "name" : "Yobot",
+    "registration" : ISODate("2008-06-17T22:33:17.000Z")
+    } }}) 
+
+# query embedded field:
+db.revisions.find({"userprofile.gender": 'male'},{title:1})
+
+# Question 5
+# 5.1 
+db.revisions.find({minor: {$exists:true}})
+#5.2
+db.revisions.find({title:'Hillary_Clinton', minor: {$exists:true}}).count()
+#5.3
+db.users.find({editcount:{"$gt": 100000},name: {$regex: "^((?!bot).)*$", $options: "si" }})
+
+

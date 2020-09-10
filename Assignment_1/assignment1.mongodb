@@ -1,0 +1,206 @@
+// MongoDB Playground
+// To disable this template go to Settings | MongoDB | Use Default Template For Playground.
+// Make sure you are connected to enable completions and to be able to run a playground.
+// Use Ctrl+Space inside a snippet or a string literal to trigger completions.
+
+// initiate connections to a local MongoDB instance
+
+use("assignment1");
+
+// Question 1
+db.tweets.aggregate(
+  { $facet: {
+      "General Tweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
+	    {$count: "General Tweets"}],
+      "Reply":  [{$match: { $and: [ {replyto_id:{$exists:true}}, {retweet_id:{$exists:false}} ]}},
+	    {$count: "Reply"}],
+      "Retweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:true}} ]}},
+	    {$count: "Retweet"}]
+  }}
+)
+
+// Question 2
+db.tweets.aggregate
+(
+    [
+        {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {$and:[{replyto_id:{$exists:true}}, {retweet_id:{$exists:false}}]}]}},
+	    {$unwind: "$hash_tags"},
+        {$group:{_id:"$hash_tags.text", numOfHastags: {$sum:1}}},
+	    {$sort:{numOfHastags:-1}},
+	    {$limit:5}
+    ]
+)
+
+//Question 3
+//Converted Date to ISO format.
+db.tweets.find().forEach(function(doc){
+    doc.created_at = new ISODate(doc.created_at);
+    db.tweets.save(doc)
+});
+//$Subtract returns milliseconds. Divide by 1000 to get Seconds.
+
+db.tweets.aggregate
+(
+    [
+        {$match: {replyto_id:{$exists:true}}},
+        {$lookup: {
+            from: "tweets", 
+            localField: "replyto_id", 
+            foreignField: "id", 
+            as: "parentTweet"}
+            },
+        {$unwind: "$parentTweet"},
+        {$project: { 
+            _id: {$toString: "$parentTweet.id"}, 
+            "first response in (seconds)": {$divide : [{ $subtract: [ "$created_at", "$parentTweet.created_at" ] }, 1000]}}},
+        {$sort:{"first response in (seconds)" : -1}},
+        {$limit:1}
+    ]
+)
+
+//Quesiton 4
+// db.tweets.aggregate
+// (
+//     [
+//         {$match: {retweet_id:{$exists:true}}},
+//         {$lookup: {
+//             from: "tweets", 
+//             localField: "retweet_id", 
+//             foreignField: "id", 
+//             as: "parentTweet"}
+//             },
+//         {$group : {_id:"$retweet_id", totalRetweets: {$sum: 1}}},
+//         // {$sort: {"totalRetweets" : -1}},
+//         {$unwind: "$parentTweet"},
+//         {$project: {missing: {$cmp: ['$parentTweet.retweet_count', '$totalRetweets']} }},
+//         {$match: {missing:{$gt:0}}},
+//         // {$match: {"$parentTweet.retweet_count": {$gt: "totalRetweets"}}},
+//         // {$match: {$or: [{parentTweet.retweet_count: {$lt: {"$totalRetweets"}}}, {parentTweet.retweet_count: {$gt: {"$totalRetweets"}}}]} },
+//         {$count: "Number of Missing Tweets"}
+//         // {$limit: 1}
+//     ]
+// )
+// db.tweets.aggregate
+// (
+//     [
+//         {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {$and:[{replyto_id:{$exists:true}}, {retweet_id:{$exists:false}}]}]}},
+//         {$match: {retweet_count:{$gt:0}}},
+//         {$lookup: {
+//             from: "tweets", 
+//             localField: "retweet_id", 
+//             foreignField: "id", 
+//             as: "parentTweet"
+//             }
+//         },
+//         {$group : {
+//             _id: {retweet_id: {$toString:"$retweet_id"}}, 
+//             uniqueIDs: {$addToSet: "$id}"},
+//             count: {$sum: 1}
+//             }
+//         },
+
+//         // {$project: {missing: {$cmp: ['$retweet_count', {$subtract: ['$count', 1]}]} }},
+//         // {$match: {missing:{$lt:0}}},
+//         // {$sort: {count : -1}},
+//         // {$unwind: "$parentTweet"},
+//         // {$project: {missing: {$cmp: ['$parentTweet.retweet_count', '$totalRetweets']} }},
+//         // {$match: {missing:{$gt:0}}},
+//         // {$match: {"$parentTweet.retweet_count": {$gt: "totalRetweets"}}},
+//         // {$match: {$or: [{parentTweet.retweet_count: {$lt: {"$totalRetweets"}}}, {parentTweet.retweet_count: {$gt: {"$totalRetweets"}}}]} },
+//         // {$count: "Number of Missing Tweets"}
+//         {$limit: 2}
+//     ]
+// )
+
+// db.tweets.aggregate
+// (
+//     [
+//         {$project: {
+//             general: {$cond: {if: {{$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}}, then: true, else: false}}}
+//             },
+//         // {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {$and:[{replyto_id:{$exists:true}}, {retweet_id:{$exists:false}}]}]}},
+//         // {$match: {retweet_count:{$gt:0}}},
+//         // {$group : {
+//         //     _id: "$retweet_id",
+//         //     id: { $first: '$id' },
+//         //     retweet_count: { $first: '$retweet_count' },
+//         //     retweet_id: { $first: '$retweet_idt' },
+//         //     replyto_id: { $first: '$replyto_id' },
+//         //     count: {$sum: 1}
+//         //     }
+//         // },
+//         // {$project: {missing: {$cmp: ['$retweet_count', '$count']} }},
+//         // {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {$and:[{replyto_id:{$exists:true}}, {retweet_id:{$exists:false}}]}]}},
+//         // {$project: {missing: {$cmp: ['$retweet_count', {$subtract: ['$count', 1]}]} }},
+//         // {$match: {missing:{$lt:0}}},
+//         // {$sort: {count : -1}},
+//         // {$unwind: "$parentTweet"},
+//         // {$project: {missing: {$cmp: ['$parentTweet.retweet_count', '$totalRetweets']} }},
+//         // {$match: {missing:{$gte:1}}},
+//         // {$match: {"$parentTweet.retweet_count": {$gt: "totalRetweets"}}},
+//         // {$match: {$or: [{parentTweet.retweet_count: {$lt: {"$totalRetweets"}}}, {parentTweet.retweet_count: {$gt: {"$totalRetweets"}}}]} },
+//         // {$count: "Number of Missing Tweets"}
+//         {$limit: 10}
+//     ]
+// )
+
+// db.tweets.aggregate(
+//   { $facet: {
+//       "General Tweet count": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
+// 	    {$match: {retweet_count:{$gte: 1}}}, {$count: "General Tweets"}],
+//       "General Tweet user": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
+// 	    {$match: {user_mentions:{$exists:false}}}, {$count: "General Tweets"}],
+//       "Reply":  [{$match: { $and: [ {replyto_id:{$exists:true}}, {retweet_id:{$exists:false}} ]}},
+// 	    {$count: "Reply"}],
+//       "Retweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:true}} ]}},
+// 	    {$count: "Retweet"}]
+//   }}
+// )
+
+/*
+[{$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {$and:[{replyto_id:{$exists:true}}, {retweet_id:{$exists:false}}]}]}},
+        {$group:{_id:"$user_mentions", numOfMentions: {$sum:1}}},
+	    {$sort:{numOfMentions:-1}},
+	    {$limit:5}
+    ]
+
+
+//Quesiton 4
+db.tweets.aggregate
+(
+    [
+        {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {$and:[{replyto_id:{$exists:true}}, {retweet_id:{$exists:false}}]}]}},
+	    {$match: {$and: [{retweet_count:{$gte: 1}},{user_mentions:{$exists:false}}]}},
+        {$count: "Missing Parent Tweets"}
+    ]
+)
+
+*/
+
+
+
+
+// db.tweets.aggregate
+// (
+//     [
+//         {$match: {replyto_id:{$exists:true}}},
+//         {$lookup: {
+//             from: "tweets", 
+//             localField: "retweet_id", 
+//             foreignField: "id", 
+//             as: "retweetParentTweet"}
+//         },
+//         {$lookup: {
+//             from: "tweets", 
+//             localField: "replyto_id", 
+//             foreignField: "id", 
+//             as: "replyParentTweet"}
+//         },
+//         // {$unwind: "$parentTweet"},
+//         // {$project: { 
+//         //     _id: {$toString: "$parentTweet.id"}, 
+//         //     "first response in (seconds)": {$divide : [{ $subtract: [ "$created_at", "$parentTweet.created_at" ] }, 1000]}}},
+//         // {$sort:{"first response in (seconds)" : -1}},
+//         {$limit:3}
+//     ]
+// )
