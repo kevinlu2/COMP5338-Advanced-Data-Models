@@ -123,7 +123,52 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 
+cursor = db.tweets.aggregate
+(
+    [
+        // Get greply and retweets only
+        {$match: {$or: [ {retweet_id:{$exists:true}}, {replyto_id:{$exists:true}}]}},
+        // Join parent tweets to reply or retweets if they exist in the database.
+        {$lookup: { 
+            from: "tweets", 
+            localField: "retweet_id" , 
+            foreignField: "id", 
+            as: "parentRetweet"
+            } 
+        },
+        {$lookup: { 
+            from: "tweets", 
+            localField: "replyto_id" , 
+            foreignField: "id", 
+            as: "parentReplytweet"
+            } 
+        },
+        // If parent exists then size of embedded document is greater than 0.
+        // If statement used to distignuish between reply and retweets.
+        { $project:{
+            _id: "$id",
+            retweet_id: "$retweet_id",
+            replyto_id: "$replyto_id",
+            retweet_count: "$retweet_count",
+            parentTweetExist: {$cond: {
+                if    : {$gt: ['$retweet_id', null]},
+                then  : { $size : {$ifNull: [ "$parentRetweet", [] ]} },
+                else  : { $size : {$ifNull: [ "$parentReplytweet", [] ]} }
+            }},
+            parentReplytweet: "$parentReplytweet",
+            parentRetweet: "$parentRetweet"
+        }},
+        // Filter only those with missing parent tweets
+        {$match: {parentTweetExist:0}},
+        // Count the the number of missing parent tweets.
+        {$count: "Number of Missing Parent Tweets"}
+    ]
+)
 
+// display the result
+while ( cursor.hasNext() ) {
+    printjson( cursor.next() );
+}
 
 /*
 // initiate connections to a local MongoDB instance
