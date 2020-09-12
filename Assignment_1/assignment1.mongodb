@@ -269,30 +269,102 @@ use("assignment1");
 // )
 
 //Question 5
+// db.tweets.aggregate
+// (
+//     [
+//         // Get general and reply tweets only
+//         {$match: {$or: [ {retweet_id:{$exists:true}}, {replyto_id:{$exists:true}}]}},
+//         //Join all retweets in the database in a list called retweets.
+//         // {$ifNull: ["retweet_id", 
+//         // {$lookup: { 
+//         //     from: "tweets", 
+//         //     localField: "replyto_id" , 
+//         //     foreignField: "id", 
+//         //     as: "parentReplytweet"
+//         //     } 
+//         // }
+//         // ]},
+//         // {$ifNull: ["replyto_id", 
+//         // {$lookup: { 
+//         //     from: "tweets", 
+//         //     localField: "retweet_id" , 
+//         //     foreignField: "id", 
+//         //     as: "parentRetweet"
+//         //     } 
+//         // }
+//         // ]},
+//         {$lookup: { 
+//             from: "tweets", 
+//             localField: "retweet_id" , 
+//             foreignField: "id", 
+//             as: "parentRetweet"
+//             } 
+//         },
+//         {$lookup: { 
+//             from: "tweets", 
+//             localField: "replyto_id" , 
+//             foreignField: "id", 
+//             as: "parentReplytweet"
+//             } 
+//         },
+//         { $project:{
+//             _id: "$id",
+//             retweet_id: "$retweet_id",
+//             replyto_id: "$replyto_id",
+//             retweet_count: "$retweet_count",
+//             parentTweetExist: {$cond: {
+//                 if    : {$gt: ['$retweet_id', null]},
+//                 then  : { $size : {$ifNull: [ "$parentRetweet", [] ]} },
+//                 else  : { $size : {$ifNull: [ "$parentReplytweet", [] ]} }
+//             }},
+//             parentReplytweet: "$parentReplytweet",
+//             parentRetweet: "$parentRetweet"
+//         }},
+//         // Count the size of the list and push the id of parent tweet and retweet count.
+//         // { $project:{
+//         //     _id: "$id",
+//         //     "summary" : {
+//         //         $switch:
+//         //         {
+//         //             branches: [
+//         //                 {
+//         //                 case: { $eq : [ { $size : {$ifNull: [ "$parentRetweet", [] ]} }, 0 ] },
+//         //                 then: 0
+//         //                 },
+//         //                 {
+//         //                 case: { $eq : [ { $size : {$ifNull: [ "$parentReplytweet", [] ]} }, 0 ] },
+//         //                 then: 0
+//         //                 }
+//         //             ],
+//         //             default: -1
+//         //         }
+//         //     }
+//         //     }
+//         // },
+//             // { $cond: [ {$exists:true}, 
+//             // parentRetweetExist:{ $size: {$ifNull: [ "$parentRetweet", [] ]}}, 
+//             // parentReplytweetExist:{$size: {$ifNull: [ "$parentReplytweet", [] ]}}] }
+//             // parentRetweetExist:{ $size: {$ifNull: [ "$parentRetweet", [] ]}},
+//             // parentReplytweetExist:{$size: {$ifNull: [ "$parentReplytweet", [] ]}},
+//             // parentTweet:"$parentTweet"
+
+//         {$match: {parentTweetExist:0}},
+//         // {$match: {$or: [ {retweet_id:{$exists:true}}, {replyto_id:{$exists:true}}]}},
+//         // Compare the parent's retweet count and the size of the retweet list. If tweet_count > size of list then returns 1.
+//         // Keep only those that are missing
+//         // {$match: {$or: [{parentTweetExist:0}, {parentReplytweet: 0}]}},
+//         // Count the the number of general and reply tweets that have have missing retweets.
+//         {$count: "Number of Missing Parent Tweets"}
+//         // {$limit: 2}
+//     ]
+// )
+
 db.tweets.aggregate
 (
     [
-        // Get general and reply tweets only
+        // Get greply and retweets only
         {$match: {$or: [ {retweet_id:{$exists:true}}, {replyto_id:{$exists:true}}]}},
-        //Join all retweets in the database in a list called retweets.
-        // {$ifNull: ["retweet_id", 
-        // {$lookup: { 
-        //     from: "tweets", 
-        //     localField: "replyto_id" , 
-        //     foreignField: "id", 
-        //     as: "parentReplytweet"
-        //     } 
-        // }
-        // ]},
-        // {$ifNull: ["replyto_id", 
-        // {$lookup: { 
-        //     from: "tweets", 
-        //     localField: "retweet_id" , 
-        //     foreignField: "id", 
-        //     as: "parentRetweet"
-        //     } 
-        // }
-        // ]},
+        // Join parent tweets to reply or retweets if they exist in the database.
         {$lookup: { 
             from: "tweets", 
             localField: "retweet_id" , 
@@ -307,52 +379,24 @@ db.tweets.aggregate
             as: "parentReplytweet"
             } 
         },
+        // If parent exists then size of embedded document is greater than 0.
+        // If statement used to distignuish between reply and retweets.
         { $project:{
             _id: "$id",
             retweet_id: "$retweet_id",
             replyto_id: "$replyto_id",
             retweet_count: "$retweet_count",
             parentTweetExist: {$cond: {
-                if    : {$eq: ['$retweet_id', false]},
-                then  : { $size : {$ifNull: [ "$parentReplytweet", [] ]} },
-                else  : { $size : {$ifNull: [ "$parentRetweet", [] ]} }
-            }}
+                if    : {$gt: ['$retweet_id', null]},
+                then  : { $size : {$ifNull: [ "$parentRetweet", [] ]} },
+                else  : { $size : {$ifNull: [ "$parentReplytweet", [] ]} }
+            }},
+            parentReplytweet: "$parentReplytweet",
+            parentRetweet: "$parentRetweet"
         }},
-        // Count the size of the list and push the id of parent tweet and retweet count.
-        // { $project:{
-        //     _id: "$id",
-        //     "summary" : {
-        //         $switch:
-        //         {
-        //             branches: [
-        //                 {
-        //                 case: { $eq : [ { $size : {$ifNull: [ "$parentRetweet", [] ]} }, 0 ] },
-        //                 then: 0
-        //                 },
-        //                 {
-        //                 case: { $eq : [ { $size : {$ifNull: [ "$parentReplytweet", [] ]} }, 0 ] },
-        //                 then: 0
-        //                 }
-        //             ],
-        //             default: -1
-        //         }
-        //     }
-        //     }
-        // },
-            // { $cond: [ {$exists:true}, 
-            // parentRetweetExist:{ $size: {$ifNull: [ "$parentRetweet", [] ]}}, 
-            // parentReplytweetExist:{$size: {$ifNull: [ "$parentReplytweet", [] ]}}] }
-            // parentRetweetExist:{ $size: {$ifNull: [ "$parentRetweet", [] ]}},
-            // parentReplytweetExist:{$size: {$ifNull: [ "$parentReplytweet", [] ]}},
-            // parentTweet:"$parentTweet"
-
+        // Filter only those with missing parent tweets
         {$match: {parentTweetExist:0}},
-        // {$match: {$or: [ {retweet_id:{$exists:true}}, {replyto_id:{$exists:true}}]}},
-        // Compare the parent's retweet count and the size of the retweet list. If tweet_count > size of list then returns 1.
-        // Keep only those that are missing
-        // {$match: {$or: [{parentTweetExist:0}, {parentReplytweet: 0}]}},
-        // Count the the number of general and reply tweets that have have missing retweets.
+        // Count the the number of missing parent tweets.
         {$count: "Number of Missing Parent Tweets"}
-        // {$limit: 1}
     ]
 )
