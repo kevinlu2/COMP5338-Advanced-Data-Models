@@ -6,10 +6,10 @@
 // // initiate connections to a local MongoDB instance
 
 
-use("assignment1");
+use("a1");
 
 // Question 1
-db.tweets.aggregate(
+db.tweets_v2.aggregate(
   { $facet: {
       "General Tweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
 	    {$count: "General Tweets"}],
@@ -21,7 +21,7 @@ db.tweets.aggregate(
 )
 
 // Question 2
-db.tweets.aggregate
+db.tweets_v2.aggregate
 (
     [
         {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {$and:[{replyto_id:{$exists:true}}, {retweet_id:{$exists:false}}]}]}},
@@ -34,18 +34,18 @@ db.tweets.aggregate
 
 //Question 3
 //Converted Date to ISO format.
-db.tweets.find().forEach(function(doc){
+db.tweets_v2.find().forEach(function(doc){
     doc.created_at = new ISODate(doc.created_at);
-    db.tweets.save(doc)
+    db.tweets_v2.save(doc)
 });
 //$Subtract returns milliseconds. Divide by 1000 to get Seconds.
 
-db.tweets.aggregate
+db.tweets_v2.aggregate
 (
     [
         {$match: {replyto_id:{$exists:true}}},
         {$lookup: {
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "replyto_id", 
             foreignField: "id", 
             as: "parentTweet"}
@@ -60,12 +60,12 @@ db.tweets.aggregate
 )
 
 //Quesiton 4
-// db.tweets.aggregate
+// db.tweets_v2.aggregate
 // (
 //     [
 //         {$match: {retweet_id:{$exists:true}}},
 //         {$lookup: {
-//             from: "tweets", 
+//             from: "tweets_v2", 
 //             localField: "retweet_id", 
 //             foreignField: "id", 
 //             as: "parentTweet"}
@@ -81,13 +81,13 @@ db.tweets.aggregate
 //         // {$limit: 1}
 //     ]
 // )
-// db.tweets.aggregate
+// db.tweets_v2.aggregate
 // (
 //     [
 //         {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {$and:[{replyto_id:{$exists:true}}, {retweet_id:{$exists:false}}]}]}},
 //         {$match: {retweet_count:{$gt:0}}},
 //         {$lookup: {
-//             from: "tweets", 
+//             from: "tweets_v2", 
 //             localField: "retweet_id", 
 //             foreignField: "id", 
 //             as: "parentTweet"
@@ -113,7 +113,7 @@ db.tweets.aggregate
 //     ]
 // )
 
-db.tweets.aggregate
+db.tweets_v2.aggregate
 (
     [
         // {$project: {
@@ -131,7 +131,7 @@ db.tweets.aggregate
         //     }
         // },
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "id" , 
             foreignField: "retweet_id", 
             as: "retweets"
@@ -175,7 +175,7 @@ db.tweets.aggregate
     ]
 )
 
-// db.tweets.aggregate(
+// db.tweets_v2.aggregate(
 //   { $facet: {
 //       "General Tweet count": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
 // 	    {$match: {retweet_count:{$gte: 1}}}, {$count: "General Tweets"}],
@@ -197,7 +197,7 @@ db.tweets.aggregate
 
 
 //Quesiton 4
-db.tweets.aggregate
+db.tweets_v2.aggregate
 (
     [
         {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {$and:[{replyto_id:{$exists:true}}, {retweet_id:{$exists:false}}]}]}},
@@ -211,18 +211,18 @@ db.tweets.aggregate
 
 
 
-// db.tweets.aggregate
+// db.tweets_v2.aggregate
 // (
 //     [
 //         {$match: {replyto_id:{$exists:true}}},
 //         {$lookup: {
-//             from: "tweets", 
+//             from: "tweets_v2", 
 //             localField: "retweet_id", 
 //             foreignField: "id", 
 //             as: "retweetParentTweet"}
 //         },
 //         {$lookup: {
-//             from: "tweets", 
+//             from: "tweets_v2", 
 //             localField: "replyto_id", 
 //             foreignField: "id", 
 //             as: "replyParentTweet"}
@@ -238,14 +238,14 @@ db.tweets.aggregate
 
 
 
-db.tweets.aggregate
+db.tweets_v2.aggregate
 (
     [
         // Get general and reply tweets only
         {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {replyto_id:{$exists:true}}]}},
         //Join all retweets in the database in a list called retweets.
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "id" , 
             foreignField: "retweet_id", 
             as: "retweets"
@@ -269,7 +269,7 @@ db.tweets.aggregate
 )
 
 //Question 5
-db.tweets.aggregate
+db.tweets_v2.aggregate
 (
     [
         // Get general and reply tweets only
@@ -277,7 +277,7 @@ db.tweets.aggregate
         //Join all retweets in the database in a list called retweets.
         // {$ifNull: ["retweet_id", 
         // {$lookup: { 
-        //     from: "tweets", 
+        //     from: "tweets_v2", 
         //     localField: "replyto_id" , 
         //     foreignField: "id", 
         //     as: "parentReplytweet"
@@ -286,7 +286,7 @@ db.tweets.aggregate
         // ]},
         // {$ifNull: ["replyto_id", 
         // {$lookup: { 
-        //     from: "tweets", 
+        //     from: "tweets_v2", 
         //     localField: "retweet_id" , 
         //     foreignField: "id", 
         //     as: "parentRetweet"
@@ -294,14 +294,14 @@ db.tweets.aggregate
         // }
         // ]},
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "retweet_id" , 
             foreignField: "id", 
             as: "parentRetweet"
             } 
         },
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "replyto_id" , 
             foreignField: "id", 
             as: "parentReplytweet"
@@ -359,21 +359,21 @@ db.tweets.aggregate
     ]
 )
 
-db.tweets.aggregate
+db.tweets_v2.aggregate
 (
     [
         // Get greply and retweets only
         {$match: {$or: [ {retweet_id:{$exists:true}}, {replyto_id:{$exists:true}}]}},
         // Join parent tweets to reply or retweets if they exist in the database.
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "retweet_id" , 
             foreignField: "id", 
             as: "parentRetweet"
             } 
         },
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "replyto_id" , 
             foreignField: "id", 
             as: "parentReplytweet"
@@ -406,21 +406,21 @@ db.tweets.aggregate
 
 // Question 6
 
-db.tweets.aggregate
+db.tweets_v2.aggregate
 (
     [
         // Get general tweets only.
         {$match: {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}},
         //Join all retweets and replies if they exist.
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "id" , 
             foreignField: "retweet_id", 
             as: "retweets"
             } 
         },
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "id" , 
             foreignField: "replyto_id", 
             as: "replies"

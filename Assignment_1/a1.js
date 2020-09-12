@@ -14,6 +14,7 @@ conn = new Mongo();
 // set the default database
 db = conn.getDB("a1");
 
+var beginning_time = Date()
 //set up
 cursor = db.tweets.aggregate(
     [
@@ -102,7 +103,9 @@ var start = new Date()
 cursor = db.tweets_v2.aggregate
 (
     [
+        // Get only reply tweets
         {$match: {replyto_id:{$exists:true}}},
+        // Embed parent tweet to reply tweet
         {$lookup: {
             from: "tweets_v2", 
             localField: "replyto_id", 
@@ -110,10 +113,14 @@ cursor = db.tweets_v2.aggregate
             as: "parentTweet"}
             },
         {$unwind: "$parentTweet"},
+        // Get the time difference between child and parent tweet.
+        // Divide time by 1000 to get seconds
         {$project: { 
             _id: {$toString: "$parentTweet.id"}, 
             "first response in (seconds)": {$divide : [{ $subtract: [ "$created_at", "$parentTweet.created_at" ] }, 1000]}}},
+        // Sort by decending so largest time difference is first.
         {$sort:{"first response in (seconds)" : -1}},
+        // Only project largest
         {$limit:1}
     ]
 )
@@ -123,7 +130,7 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 var end = new Date()
-print("\n Question 4")
+print("\nQuestion 4")
 print("\nQuery Execution time: " + (end - start) + "ms");
 var start = new Date()
 // Quesiton 4
@@ -241,13 +248,8 @@ cursor = db.tweets_v2.aggregate
         // Count the size of the each embedded document.
         { $project:{
             _id: "$id",
-            retweet_id: "$retweet_id",
-            replyto_id: "$replyto_id",
-            retweet_count: "$retweet_count",
             numOfRetweets:{$size:"$retweets"},
             numOfReplies:{$size:"$replies"},
-            retweets:"$retweets",
-            replies:"$replies"
             }
         },
         // FIlter those that have 0 retweets and replies in the database.
@@ -264,4 +266,8 @@ while ( cursor.hasNext() ) {
 var end = new Date()
 print("\nQuery Execution time: " + (end - start) + "ms");
 
-db.tweets_v2_v2.drop()
+// Drop the collection
+db.tweets_v2.drop()
+
+var end_time = Date()
+print("\nQuery Execution time: " + (end_time - beginning_time) + "ms");
