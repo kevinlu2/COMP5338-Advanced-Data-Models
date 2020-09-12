@@ -1,11 +1,8 @@
 /*
- * This is a sample script for MongoDB Assignment
- * It shows recommended practice and also basic steps
- * to connect to datanbase server, to set default database
- * and to drop a collection's working copy
- * 
- * The sample assumes that you have imported the tweets data
- * to a collection called tweets in a database a1.
+Kevin Lu
+500403664
+kelu5219
+12/09/19
 */
 
 // make a connection to the database server
@@ -14,7 +11,6 @@ conn = new Mongo();
 // set the default database
 db = conn.getDB("a1");
 
-var beginning_time = Date()
 //set up
 cursor = db.tweets.aggregate(
     [
@@ -42,7 +38,7 @@ while ( cursor.hasNext() ) {
 }
 
 print("\nQuestion 1");
-var start = new Date()
+var start = new Date();
 // Question 1 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets_v2.aggregate(
@@ -61,10 +57,10 @@ cursor = db.tweets_v2.aggregate(
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
-var end = new Date()
-print("\nQuery Execution time: " + (end - start) + "ms");
+var end = new Date();
+print("Query Execution time:" + (end - start) + "ms\n");
 print("\nQuestion 2");
-var start = new Date()
+var start = new Date();
 // Quesiton 2 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets_v2.aggregate
@@ -87,11 +83,11 @@ cursor = db.tweets_v2.aggregate
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
-var end = new Date()
-print("\nQuery Execution time: " + (end - start) + "ms");
+var end = new Date();
+print("Query Execution time:" + (end - start) + "ms\n");
 print("\nQuestion 3");
 
-var start = new Date()
+var start = new Date();
 // Quesiton 3
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // cursor = db.tweets_v2.aggregate
@@ -129,10 +125,10 @@ cursor = db.tweets_v2.aggregate
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
-var end = new Date()
+var end = new Date();
+print("Query Execution time:" + (end - start) + "ms\n");
 print("\nQuestion 4")
-print("\nQuery Execution time: " + (end - start) + "ms");
-var start = new Date()
+var start = new Date();
 // Quesiton 4
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets_v2.aggregate
@@ -168,10 +164,10 @@ cursor = db.tweets_v2.aggregate
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
-var end = new Date()
-print("\nQuery Execution time: " + (end - start) + "ms");
+var end = new Date();
+print("Query Execution time:" + (end - start) + "ms\n");
 print("\nQuestion 5");
-var start = new Date()
+var start = new Date();
 //Question 5
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets_v2.aggregate
@@ -198,9 +194,6 @@ cursor = db.tweets_v2.aggregate
         // If statement used to distignuish between reply and retweets.
         { $project:{
             _id: "$id",
-            retweet_id: "$retweet_id",
-            replyto_id: "$replyto_id",
-            retweet_count: "$retweet_count",
             parentTweetExist: {$cond: {
                 if    : {$gt: ['$retweet_id', null]},
                 then  : { $size : {$ifNull: [ "$parentRetweet", [] ]} },
@@ -219,10 +212,10 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 
-var end = new Date()
-print("\nQuery Execution time: " + (end - start) + "ms");
+var end = new Date();
+print("Query Execution time:" + (end - start) + "ms\n");
 print("\nQuestion 6");
-var start = new Date()
+var start = new Date();
 // Quesiton 6
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets_v2.aggregate
@@ -263,11 +256,8 @@ cursor = db.tweets_v2.aggregate
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
-var end = new Date()
-print("\nQuery Execution time: " + (end - start) + "ms");
+var end = new Date();
+print("Query Execution time:" + (end - start) + "ms\n");
 
 // Drop the collection
 db.tweets_v2.drop()
-
-var end_time = Date()
-print("\nQuery Execution time: " + (end_time - beginning_time) + "ms");
