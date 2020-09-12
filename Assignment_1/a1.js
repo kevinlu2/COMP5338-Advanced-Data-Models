@@ -12,11 +12,39 @@
 conn = new Mongo();
 
 // set the default database
-db = conn.getDB("assignment1");
+db = conn.getDB("a1");
 
+//set up
+cursor = db.tweets.aggregate(
+    [
+        {
+           $project: {
+                _id: 1,
+                id: 1,
+                retweet_id: 1,
+                replyto_id: 1,
+                retweet_count: 1,
+                hash_tags:1,
+                created_at: {
+                    $dateFromString: {
+                    dateString: '$created_at',}
+               }
+           }
+        },  
+        {
+           $out: 'tweets_v2',
+        },
+     ])
+
+while ( cursor.hasNext() ) {
+    printjson( cursor.next() );
+}
+
+print("\nQuestion 1");
+var start = new Date()
 // Question 1 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cursor = db.tweets.aggregate(
+cursor = db.tweets_v2.aggregate(
     // facet to output 3 queries
     { $facet: {
         "General Tweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
@@ -32,10 +60,13 @@ cursor = db.tweets.aggregate(
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
-
+var end = new Date()
+print("\nQuery Execution time: " + (end - start) + "ms");
+print("\nQuestion 2");
+var start = new Date()
 // Quesiton 2 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cursor = db.tweets.aggregate
+cursor = db.tweets_v2.aggregate
 (
     [
         // Return only general and reply tweets
@@ -55,23 +86,25 @@ cursor = db.tweets.aggregate
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
+var end = new Date()
+print("\nQuery Execution time: " + (end - start) + "ms");
+print("\nQuestion 3");
 
-
-// cursor = db.tweets.find().forEach(function(doc){
-//     doc.created_at = new ISODate(doc.created_at);
-//     db.tweets.save(doc)
-// });
-// cursor.next()
-
-
+var start = new Date()
 // Quesiton 3
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cursor = db.tweets.aggregate
+// cursor = db.tweets_v2.aggregate
+// db.tweets_v2.find().forEach(function(doc){
+//     doc.created_at = new ISODate(doc.created_at);
+//     db.tweets_v2.save(doc)
+// });
+
+cursor = db.tweets_v2.aggregate
 (
     [
         {$match: {replyto_id:{$exists:true}}},
         {$lookup: {
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "replyto_id", 
             foreignField: "id", 
             as: "parentTweet"}
@@ -89,17 +122,20 @@ cursor = db.tweets.aggregate
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
-
+var end = new Date()
+print("\n Question 4")
+print("\nQuery Execution time: " + (end - start) + "ms");
+var start = new Date()
 // Quesiton 4
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cursor = db.tweets.aggregate
+cursor = db.tweets_v2.aggregate
 (
     [
         // Get general and reply tweets only
         {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {replyto_id:{$exists:true}}]}},
         //Join all retweets in the database in a list called retweets.
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "id" , 
             foreignField: "retweet_id", 
             as: "retweets"
@@ -110,7 +146,6 @@ cursor = db.tweets.aggregate
             _id: "$id",
             retweet_count: "$retweet_count",
             numOfRetweets:{$size:"$retweets"},
-            students:"$retweets"
             }
         },
         // Compare the parent's retweet count and the size of the retweet list. If tweet_count > size of list then returns 1.
@@ -118,7 +153,7 @@ cursor = db.tweets.aggregate
         // Keep only those that are missing
         {$match: {missing:1}},
         // Count the the number of general and reply tweets that have have missing retweets.
-        {$count: "Number of Missing Tweets"}
+        {$count: "Number of Missing Retweets for General and Reply tweets"}
     ]
 )
 
@@ -126,24 +161,27 @@ cursor = db.tweets.aggregate
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
-
+var end = new Date()
+print("\nQuery Execution time: " + (end - start) + "ms");
+print("\nQuestion 5");
+var start = new Date()
 //Question 5
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cursor = db.tweets.aggregate
+cursor = db.tweets_v2.aggregate
 (
     [
         // Get greply and retweets only
         {$match: {$or: [ {retweet_id:{$exists:true}}, {replyto_id:{$exists:true}}]}},
         // Join parent tweets to reply or retweets if they exist in the database.
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "retweet_id" , 
             foreignField: "id", 
             as: "parentRetweet"
             } 
         },
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "replyto_id" , 
             foreignField: "id", 
             as: "parentReplytweet"
@@ -161,8 +199,6 @@ cursor = db.tweets.aggregate
                 then  : { $size : {$ifNull: [ "$parentRetweet", [] ]} },
                 else  : { $size : {$ifNull: [ "$parentReplytweet", [] ]} }
             }},
-            parentReplytweet: "$parentReplytweet",
-            parentRetweet: "$parentRetweet"
         }},
         // Filter only those with missing parent tweets
         {$match: {parentTweetExist:0}},
@@ -176,24 +212,27 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 
-
+var end = new Date()
+print("\nQuery Execution time: " + (end - start) + "ms");
+print("\nQuestion 6");
+var start = new Date()
 // Quesiton 6
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-cursor = db.tweets.aggregate
+cursor = db.tweets_v2.aggregate
 (
     [
         // Get general tweets only.
         {$match: {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}},
         //Join all retweets and replies if they exist.
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "id" , 
             foreignField: "retweet_id", 
             as: "retweets"
             } 
         },
         {$lookup: { 
-            from: "tweets", 
+            from: "tweets_v2", 
             localField: "id" , 
             foreignField: "replyto_id", 
             as: "replies"
@@ -222,3 +261,7 @@ cursor = db.tweets.aggregate
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
+var end = new Date()
+print("\nQuery Execution time: " + (end - start) + "ms");
+
+db.tweets_v2_v2.drop()
