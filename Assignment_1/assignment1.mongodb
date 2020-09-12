@@ -251,7 +251,7 @@ db.tweets.aggregate
             as: "retweets"
             } 
         },
-        // Count the size of the list and push the id of parent tweet and retweet count.
+        // Count the size of the list and push the id of parent tweet and retweet count
         { $project:{
             _id: "$id",
             retweet_count: "$retweet_count",
@@ -320,7 +320,7 @@ db.tweets.aggregate
             parentReplytweet: "$parentReplytweet",
             parentRetweet: "$parentRetweet"
         }},
-        // Count the size of the list and push the id of parent tweet and retweet count.
+        // Count the size of the list and push the id of parent tweet and retweet count
         // { $project:{
         //     _id: "$id",
         //     "summary" : {

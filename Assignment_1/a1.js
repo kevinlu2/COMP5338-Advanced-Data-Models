@@ -14,7 +14,8 @@ conn = new Mongo();
 // set the default database
 db = conn.getDB("assignment1");
 
-// Question 1 query
+// Question 1 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets.aggregate(
     // facet to output 3 queries
     { $facet: {
@@ -32,7 +33,8 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 
-// Quesiton 2 query
+// Quesiton 2 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets.aggregate
 (
     [
@@ -62,7 +64,8 @@ while ( cursor.hasNext() ) {
 // cursor.next()
 
 
-
+// Quesiton 3
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets.aggregate
 (
     [
@@ -87,10 +90,8 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 
-
-
-
-
+// Quesiton 4
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets.aggregate
 (
     [
@@ -104,7 +105,7 @@ cursor = db.tweets.aggregate
             as: "retweets"
             } 
         },
-        // Count the size of the list and push the id of parent tweet and retweet count.
+        // Count the size of the list and push the id of parent tweet and retweet count
         { $project:{
             _id: "$id",
             retweet_count: "$retweet_count",
@@ -126,6 +127,8 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 
+//Question 5
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets.aggregate
 (
     [
@@ -173,6 +176,9 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 
+
+// Quesiton 6
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets.aggregate
 (
     [
@@ -216,28 +222,3 @@ cursor = db.tweets.aggregate
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
-
-/*
-// initiate connections to a local MongoDB instance
-conn = new Mongo();
-
-// specify the database as "wikipedia"
-db = conn.getDB("assignment1");
-
-//run a query and get the returned cursor object
-cursor = db.tweets.aggregate(
-    { $facet: {
-        "General Tweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
-          {$count: "General Tweets"}],
-        "Reply":  [{$match: { $and: [ {replyto_id:{$exists:true}}, {retweet_id:{$exists:false}} ]}},
-          {$count: "Reply"}],
-        "Retweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:true}} ]}},
-          {$count: "Retweet"}]
-    }}
-) //run a query
-
-//print the results
-while (cursor.hasNext()) {
-    printjson( cursor.next() );
-}
-*/
