@@ -14,8 +14,9 @@ conn = new Mongo();
 // set the default database
 db = conn.getDB("assignment1");
 
-
+// Question 1 query
 cursor = db.tweets.aggregate(
+    // facet to output 3 queries
     { $facet: {
         "General Tweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
           {$count: "General Tweets"}],
@@ -31,15 +32,19 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 
-
-
+// Quesiton 2 query
 cursor = db.tweets.aggregate
 (
     [
+        // Return only general and reply tweets
         {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {$and:[{replyto_id:{$exists:true}}, {retweet_id:{$exists:false}}]}]}},
-	    {$unwind: "$hash_tags"},
+        
+        {$unwind: "$hash_tags"},
+        // Group hastags by texts to find number of hastags in tweet
         {$group:{_id:"$hash_tags.text", numOfHastags: {$sum:1}}},
-	    {$sort:{numOfHastags:-1}},
+        // Sort by decending order so that most common hastag is at the top.
+        {$sort:{numOfHastags:-1}},
+        // Only show top 5
 	    {$limit:5}
     ]
 )
@@ -203,7 +208,7 @@ cursor = db.tweets.aggregate
         // FIlter those that have 0 retweets and replies in the database.
         {$match: {$and: [{numOfRetweets:0}, {numOfReplies:0}]}},
         // Count the the number of general and reply tweets that have have missing retweets.
-        {$count: "Number of General Tweets that do not have a reply nor a retweet in the data set."}
+        {$count: "Number of General Tweets that do not have a reply nor a retweet in the data set"}
     ]
 )
 

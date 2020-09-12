@@ -268,7 +268,7 @@ db.tweets.aggregate
     ]
 )
 
-Question 5
+//Question 5
 db.tweets.aggregate
 (
     [
@@ -441,6 +441,6 @@ db.tweets.aggregate
         // FIlter those that have 0 retweets and replies in the database.
         {$match: {$and: [{numOfRetweets:0}, {numOfReplies:0}]}},
         // Count the the number of general and reply tweets that have have missing retweets.
-        {$count: "Number of General Tweets that do not have a reply nor a retweet in the data set."}
+        {$count: "Number of General Tweets that do not have a reply nor a retweet in the data set"}
     ]
 )
