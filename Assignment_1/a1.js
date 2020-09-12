@@ -88,7 +88,40 @@ while ( cursor.hasNext() ) {
 
 
 
+cursor = db.tweets.aggregate
+(
+    [
+        // Get general and reply tweets only
+        {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {replyto_id:{$exists:true}}]}},
+        //Join all retweets in the database in a list called retweets.
+        {$lookup: { 
+            from: "tweets", 
+            localField: "id" , 
+            foreignField: "retweet_id", 
+            as: "retweets"
+            } 
+        },
+        // Count the size of the list and push the id of parent tweet and retweet count.
+        { $project:{
+            _id: "$id",
+            retweet_count: "$retweet_count",
+            numOfRetweets:{$size:"$retweets"},
+            students:"$retweets"
+            }
+        },
+        // Compare the parent's retweet count and the size of the retweet list. If tweet_count > size of list then returns 1.
+        {$project: {missing: {$cmp: ['$retweet_count', '$numOfRetweets']} }},
+        // Keep only those that are missing
+        {$match: {missing:1}},
+        // Count the the number of general and reply tweets that have have missing retweets.
+        {$count: "Number of Missing Tweets"}
+    ]
+)
 
+// display the result
+while ( cursor.hasNext() ) {
+    printjson( cursor.next() );
+}
 
 
 
