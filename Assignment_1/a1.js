@@ -74,8 +74,6 @@ cursor = db.tweets.aggregate
             "first response in (seconds)": {$divide : [{ $subtract: [ "$created_at", "$parentTweet.created_at" ] }, 1000]}}},
         {$sort:{"first response in (seconds)" : -1}},
         {$limit:1}
-
-
     ]
 )
 
@@ -162,6 +160,50 @@ cursor = db.tweets.aggregate
         {$match: {parentTweetExist:0}},
         // Count the the number of missing parent tweets.
         {$count: "Number of Missing Parent Tweets"}
+    ]
+)
+
+// display the result
+while ( cursor.hasNext() ) {
+    printjson( cursor.next() );
+}
+
+cursor = db.tweets.aggregate
+(
+    [
+        // Get general tweets only.
+        {$match: {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}},
+        //Join all retweets and replies if they exist.
+        {$lookup: { 
+            from: "tweets", 
+            localField: "id" , 
+            foreignField: "retweet_id", 
+            as: "retweets"
+            } 
+        },
+        {$lookup: { 
+            from: "tweets", 
+            localField: "id" , 
+            foreignField: "replyto_id", 
+            as: "replies"
+            } 
+        },
+        // Count the size of the each embedded document.
+        { $project:{
+            _id: "$id",
+            retweet_id: "$retweet_id",
+            replyto_id: "$replyto_id",
+            retweet_count: "$retweet_count",
+            numOfRetweets:{$size:"$retweets"},
+            numOfReplies:{$size:"$replies"},
+            retweets:"$retweets",
+            replies:"$replies"
+            }
+        },
+        // FIlter those that have 0 retweets and replies in the database.
+        {$match: {$and: [{numOfRetweets:0}, {numOfReplies:0}]}},
+        // Count the the number of general and reply tweets that have have missing retweets.
+        {$count: "Number of General Tweets that do not have a reply nor a retweet in the data set."}
     ]
 )
 
