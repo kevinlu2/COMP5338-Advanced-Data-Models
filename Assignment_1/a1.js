@@ -10,7 +10,7 @@ conn = new Mongo();
 
 // set the default database
 db = conn.getDB("a1");
-
+var starting = new Date();
 //set up
 cursor = db.tweets.aggregate(
     [
@@ -35,23 +35,47 @@ cursor = db.tweets.aggregate(
 
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
-}
+};
+
+// Add Indexes
+print("\nIndexing");
+var start = new Date();
+// Indexes 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+db.tweets_v2.createIndexes
+(
+    [{id: 1 , replyto_id: 1 },
+    { replyto_id: 1 , id: 1 },
+    { id: 1 , retweet_id: 1 },
+    { retweet_id: 1 , id: 1 },
+    { id: 1 , retweet_count: 1 },
+    { retweet_count: 1},
+    { retweet_id: 1},
+    { created_at: 1 }]
+)
+
+// // display the result
+// while ( cursor.hasNext() ) {
+//     printjson( cursor.next() )
+// }
+
+var end = new Date();
+print("Query Execution time:" + (end - start) + "ms\n");
 
 print("\nQuestion 1");
 var start = new Date();
 // Question 1 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets_v2.aggregate(
-    // facet to output 3 queries
     { $facet: {
         "General Tweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
           {$count: "General Tweets"}],
-        "Reply":  [{$match: { $and: [ {replyto_id:{$exists:true}}, {retweet_id:{$exists:false}} ]}},
+        "Reply":  [{$match: {replyto_id:{$exists:true}}},
           {$count: "Reply"}],
-        "Retweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:true}} ]}},
+        "Retweet": [{$match: {retweet_id:{$exists:true}}},
           {$count: "Retweet"}]
     }}
-)
+  )
 
 // display the result
 while ( cursor.hasNext() ) {
@@ -67,7 +91,7 @@ cursor = db.tweets_v2.aggregate
 (
     [
         // Return only general and reply tweets
-        {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {$and:[{replyto_id:{$exists:true}}, {retweet_id:{$exists:false}}]}]}},
+        {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {replyto_id:{$exists:true}}]}},
         
         {$unwind: "$hash_tags"},
         // Group hastags by texts to find number of hastags in tweet
@@ -258,6 +282,7 @@ while ( cursor.hasNext() ) {
 }
 var end = new Date();
 print("Query Execution time:" + (end - start) + "ms\n");
-
+var ending = new Date();
+print("Query Execution time:" + (ending - starting) + "ms\n");
 // Drop the collection
 db.tweets_v2.drop()

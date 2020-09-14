@@ -13,9 +13,9 @@ db.tweets_v2.aggregate(
   { $facet: {
       "General Tweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
 	    {$count: "General Tweets"}],
-      "Reply":  [{$match: { $and: [ {replyto_id:{$exists:true}}, {retweet_id:{$exists:false}} ]}},
+      "Reply":  [{$match: {replyto_id:{$exists:true}}},
 	    {$count: "Reply"}],
-      "Retweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:true}} ]}},
+      "Retweet": [{$match: {retweet_id:{$exists:true}}},
 	    {$count: "Retweet"}]
   }}
 )
@@ -444,3 +444,74 @@ db.tweets_v2.aggregate
         {$count: "Number of General Tweets that do not have a reply nor a retweet in the data set"}
     ]
 )
+
+
+
+db.tweets.aggregate(
+    [
+        {
+           $project: {
+                _id: 1,
+                id: 1,
+                retweet_id: 1,
+                replyto_id: 1,
+                retweet_count: 1,
+                hash_tags:1,
+                created_at: {
+                    $dateFromString: {
+                    dateString: '$created_at',}
+               }
+           }
+        },  
+        {
+           $out: 'tweets_v2',
+        },
+     ])
+db.tweets_v2.drop()
+
+// db.tweets_v2.createIndex(
+//   { replyto_id: 1 , id: 1 }
+// )
+// db.tweets_v2.createIndex(
+//   { id: 1 , created_at: 1 }
+// )
+
+// db.tweets_v2.createIndex(
+//   { id: 1, retweet_count: 1 }
+// )
+
+// db.tweets_v2.createIndex(
+//   { id: 1, retweet_id: 1 }
+// )
+
+// 
+
+// db.tweets_v2.getIndexes()
+
+// db.tweets_v2.createIndex(
+//   { id: 1, retweet_id: 1 }, {sparse: true}
+// )
+
+// db.scores.aggregate( [
+//    {
+//      $set: {
+//         Retweets: { $sum: "$homework" },
+//         totalQuiz: { $sum: "$quiz" }
+//      }
+//    },
+//    {
+//      $set: {
+//         totalScore: { $add: [ "$totalHomework", "$totalQuiz", "$extraCredit" ] } }
+//    }
+// ] )
+
+// db.tweets_v2.createIndexes
+// (
+//     [{id: 1 , replyto_id: 1 },
+//     { replyto_id: 1 , id: 1 },
+//     { id: 1 , retweet_id: 1 },
+//     { id: 1 , retweet_count: 1 },
+//     { retweet_count: 1},
+//     { retweet_id: 1},
+//     { created_at: 1 }]
+// )
