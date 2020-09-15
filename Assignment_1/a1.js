@@ -37,11 +37,10 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 };
 
-// Add Indexes
-print("\nIndexing");
-var start = new Date();
 // Indexes 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+print("\nIndexing");
+var start = new Date();
 db.tweets_v2.createIndexes
 (
     [{id: 1 , replyto_id: 1 },
@@ -54,18 +53,13 @@ db.tweets_v2.createIndexes
     { created_at: 1 }]
 )
 
-// // display the result
-// while ( cursor.hasNext() ) {
-//     printjson( cursor.next() )
-// }
-
 var end = new Date();
 print("Query Execution time:" + (end - start) + "ms\n");
 
-print("\nQuestion 1");
-var start = new Date();
 // Question 1 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+print("\nQuestion 1");
+var start = new Date();
 cursor = db.tweets_v2.aggregate(
     { $facet: {
         "General Tweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
@@ -83,16 +77,16 @@ while ( cursor.hasNext() ) {
 }
 var end = new Date();
 print("Query Execution time:" + (end - start) + "ms\n");
-print("\nQuestion 2");
-var start = new Date();
+
 // Quesiton 2 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+print("\nQuestion 2");
+var start = new Date();
 cursor = db.tweets_v2.aggregate
 (
     [
         // Return only general and reply tweets
         {$match: {$or: [ {$and:[{replyto_id:{$exists:false}}, {retweet_id:{$exists:false}}]}, {replyto_id:{$exists:true}}]}},
-        
         {$unwind: "$hash_tags"},
         // Group hastags by texts to find number of hastags in tweet
         {$group:{_id:"$hash_tags.text", numOfHastags: {$sum:1}}},
@@ -108,17 +102,12 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 var end = new Date();
-print("Query Execution time:" + (end - start) + "ms\n");
-print("\nQuestion 3");
 
-var start = new Date();
 // Quesiton 3
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// cursor = db.tweets_v2.aggregate
-// db.tweets_v2.find().forEach(function(doc){
-//     doc.created_at = new ISODate(doc.created_at);
-//     db.tweets_v2.save(doc)
-// });
+print("Query Execution time:" + (end - start) + "ms\n");
+print("\nQuestion 3");
+var start = new Date();
 
 cursor = db.tweets_v2.aggregate
 (
@@ -150,11 +139,12 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 var end = new Date();
+
+// Quesiton 4
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 print("Query Execution time:" + (end - start) + "ms\n");
 print("\nQuestion 4")
 var start = new Date();
-// Quesiton 4
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets_v2.aggregate
 (
     [
@@ -189,11 +179,12 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 var end = new Date();
+
+//Question 5
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 print("Query Execution time:" + (end - start) + "ms\n");
 print("\nQuestion 5");
 var start = new Date();
-//Question 5
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets_v2.aggregate
 (
     [
@@ -237,11 +228,12 @@ while ( cursor.hasNext() ) {
 }
 
 var end = new Date();
+
+// Quesiton 6
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 print("Query Execution time:" + (end - start) + "ms\n");
 print("\nQuestion 6");
 var start = new Date();
-// Quesiton 6
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 cursor = db.tweets_v2.aggregate
 (
     [
@@ -283,6 +275,6 @@ while ( cursor.hasNext() ) {
 var end = new Date();
 print("Query Execution time:" + (end - start) + "ms\n");
 var ending = new Date();
-print("Query Execution time:" + (ending - starting) + "ms\n");
+print("Total Execution time:" + (ending - starting) + "ms\n");
 // Drop the collection
 db.tweets_v2.drop()
