@@ -1,3 +1,4 @@
+
 /*
 Kevin Lu
 500403664
@@ -10,7 +11,7 @@ conn = new Mongo();
 
 // set the default database
 db = conn.getDB("a1");
-
+var starting = new Date();
 //set up
 cursor = db.tweets.aggregate(
     [
@@ -39,6 +40,8 @@ while ( cursor.hasNext() ) {
 
 // Indexes 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+print("\nIndexing");
+var start = new Date();
 db.tweets_v2.createIndexes
 (
     [{id: 1 , replyto_id: 1 },
@@ -51,40 +54,35 @@ db.tweets_v2.createIndexes
     { created_at: 1 }]
 )
 
+var end = new Date();
+print("Query Execution time:" + (end - start) + "ms\n");
+
 // Question 1 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 print("\nQuestion 1");
 var start = new Date();
 cursor = db.tweets_v2.aggregate(
     { $facet: {
-        "General_Tweet": [ {$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
-          {$count: "total count"}],
+        "General Tweet": [{$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
+          {$count: "General Tweets"}],
         "Reply":  [{$match: {replyto_id:{$exists:true}}},
-          {$count: "total count"}],
+          {$count: "Reply"}],
         "Retweet": [{$match: {retweet_id:{$exists:true}}},
-          {$count: "total count"}]
-    }},
-    // {$addFields :{
-    //     "General_Tweet": {
-    //         $arrayElemAt: [ "$General_Tweet", 0 ]},
-    //     "Reply": {
-    //         $arrayElemAt: [ "$Reply", 0 ]},
-    //     "Retweet": {
-    //         $arrayElemAt: [ "$Retweet", 0 ]}
-    //     }
-    // },
-    //{$project: {"General Tweet": "$General_Tweet"}}
-    {$project: {"General Tweet": {$arrayElemAt: [ "$General_Tweet", 0 ]} ,"Reply": {$arrayElemAt: [ "$Reply", 0 ]},"Retweet": {$arrayElemAt: [ "$Retweet", 0 ]}}}
+          {$count: "Retweet"}]
+    }}
   )
 
 // display the result
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
+var end = new Date();
+print("Query Execution time:" + (end - start) + "ms\n");
 
 // Quesiton 2 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 print("\nQuestion 2");
+var start = new Date();
 cursor = db.tweets_v2.aggregate
 (
     [
@@ -93,12 +91,8 @@ cursor = db.tweets_v2.aggregate
         {$unwind: "$hash_tags"},
         // Group hastags by texts to find number of hastags in tweet
         {$group:{_id: "$hash_tags.text", numOfHastags: {$sum:1}}},
-        { 
-            $addFields: { hash_tag: "$_id" }
-        },
-        {$project: {_id: 0, hash_tag:1, count: "$numOfHastags"}},
         // Sort by decending order so that most common hastag is at the top.
-        {$sort:{count:-1}},
+        {$sort:{numOfHastags:-1}},
         // Only show top 5
 	    {$limit:5}
     ]
@@ -112,7 +106,9 @@ var end = new Date();
 
 // Quesiton 3
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+print("Query Execution time:" + (end - start) + "ms\n");
 print("\nQuestion 3");
+var start = new Date();
 
 cursor = db.tweets_v2.aggregate
 (
@@ -132,9 +128,9 @@ cursor = db.tweets_v2.aggregate
         {$project: { 
             _id: 0,
             tweet_id: {$toString: "$parentTweet.id"}, 
-            "duration in seconds": {$divide : [{ $subtract: [ "$created_at", "$parentTweet.created_at" ] }, 1000]}}},
+            "duration": {$divide : [{ $subtract: [ "$created_at", "$parentTweet.created_at" ] }, 1000]}}},
         // Sort by decending so largest time difference is first.
-        {$sort:{"duration in seconds" : -1}},
+        {$sort:{"duration" : -1}},
         // Only project largest
         {$limit:1}
     ]
@@ -144,9 +140,11 @@ cursor = db.tweets_v2.aggregate
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
+var end = new Date();
 
 // Quesiton 4
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+print("Query Execution time:" + (end - start) + "ms\n");
 print("\nQuestion 4")
 var start = new Date();
 cursor = db.tweets_v2.aggregate
@@ -174,7 +172,7 @@ cursor = db.tweets_v2.aggregate
         // Keep only those that are missing
         {$match: {missing:1}},
         // Count the the number of general and reply tweets that have have missing retweets.
-        {$count: "Number of General and Reply with missing retweets"}
+        {$count: "Number of Missing Retweets for General and Reply tweets"}
     ]
 )
 
@@ -182,9 +180,11 @@ cursor = db.tweets_v2.aggregate
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
+var end = new Date();
 
 //Question 5
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+print("Query Execution time:" + (end - start) + "ms\n");
 print("\nQuestion 5");
 var start = new Date();
 cursor = db.tweets_v2.aggregate
@@ -229,10 +229,13 @@ while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
 
+var end = new Date();
 
 // Quesiton 6
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+print("Query Execution time:" + (end - start) + "ms\n");
 print("\nQuestion 6");
+var start = new Date();
 cursor = db.tweets_v2.aggregate
 (
     [
@@ -263,7 +266,7 @@ cursor = db.tweets_v2.aggregate
         // FIlter those that have 0 retweets and replies in the database.
         {$match: {$and: [{numOfRetweets:0}, {numOfReplies:0}]}},
         // Count the the number of general and reply tweets that have have missing retweets.
-        {$count: "Number of General Tweets with no child tweet"}
+        {$count: "Number of General Tweets that do not have a reply nor a retweet in the data set"}
     ]
 )
 
@@ -271,5 +274,9 @@ cursor = db.tweets_v2.aggregate
 while ( cursor.hasNext() ) {
     printjson( cursor.next() );
 }
+var end = new Date();
+print("Query Execution time:" + (end - start) + "ms\n");
+var ending = new Date();
+print("Total Execution time:" + (ending - starting) + "ms\n");
 // Drop the collection
 db.tweets_v2.drop()
