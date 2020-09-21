@@ -41,11 +41,13 @@ while ( cursor.hasNext() ) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 db.tweets_v2.createIndexes
 (
+    //Look up indicies
     [{id: 1 , replyto_id: 1 },
     { replyto_id: 1 , id: 1 },
     { id: 1 , retweet_id: 1 },
     { retweet_id: 1 , id: 1 },
     { id: 1 , retweet_count: 1 },
+    // Grouping and projecting indicies
     { retweet_count: 1},
     { retweet_id: 1},
     { created_at: 1 }]
@@ -58,23 +60,23 @@ var start = new Date();
 cursor = db.tweets_v2.aggregate(
     { $facet: {
         "General_Tweet": [ {$match: { $and: [ {replyto_id:{$exists:false}}, {retweet_id:{$exists:false}} ]}},
-          {$count: "total count"}],
+          {$count: "total_count"}],
         "Reply":  [{$match: {replyto_id:{$exists:true}}},
-          {$count: "total count"}],
+          {$count: "total_count"}],
         "Retweet": [{$match: {retweet_id:{$exists:true}}},
-          {$count: "total count"}]
+          {$count: "total_count"}]
     }},
-    // {$addFields :{
-    //     "General_Tweet": {
-    //         $arrayElemAt: [ "$General_Tweet", 0 ]},
-    //     "Reply": {
-    //         $arrayElemAt: [ "$Reply", 0 ]},
-    //     "Retweet": {
-    //         $arrayElemAt: [ "$Retweet", 0 ]}
-    //     }
-    // },
-    //{$project: {"General Tweet": "$General_Tweet"}}
-    {$project: {"General Tweet": {$arrayElemAt: [ "$General_Tweet", 0 ]} ,"Reply": {$arrayElemAt: [ "$Reply", 0 ]},"Retweet": {$arrayElemAt: [ "$Retweet", 0 ]}}}
+    {$addFields :{
+        "General_Tweet": {
+            $arrayElemAt: [ "$General_Tweet.total_count", 0 ]},
+        "Reply": {
+            $arrayElemAt: [ "$Reply.total_count", 0 ]},
+        "Retweet": {
+            $arrayElemAt: [ "$Retweet.total_count", 0 ]}
+        }
+    },
+    {$project: {"General": "$General_Tweet", "Reply": "$Reply", "Retweet": "$Retweet"}}
+    // {$project: {"General Tweet": {$arrayElemAt: [ "$General_Tweet", 0 ]} ,"Reply": {$arrayElemAt: [ "$Reply", 0 ]},"Retweet": {$arrayElemAt: [ "$Retweet", 0 ]}}}
   )
 
 // display the result
@@ -94,9 +96,9 @@ cursor = db.tweets_v2.aggregate
         // Group hastags by texts to find number of hastags in tweet
         {$group:{_id: "$hash_tags.text", numOfHastags: {$sum:1}}},
         { 
-            $addFields: { hash_tag: "$_id" }
+            $addFields: { "Hashtag": "$_id" }
         },
-        {$project: {_id: 0, hash_tag:1, count: "$numOfHastags"}},
+        {$project: {_id: 0, "Hashtag": 1, count: "$numOfHastags"}},
         // Sort by decending order so that most common hastag is at the top.
         {$sort:{count:-1}},
         // Only show top 5
