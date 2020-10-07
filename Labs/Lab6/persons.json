@@ -1,0 +1,33 @@
+[
+    {
+        "name":"Michael",
+        "age": 50,
+        "children": ["Selina","Rana","Selma"]
+    },
+    {
+        "name": "Selina",
+        "age" : 25,
+        "children": ["Neo"]
+    },
+    {
+        "name": "Rana",
+        "age": 23
+    },
+    {
+        "name": "Selma",
+        "age": 20
+    },
+    {
+        "name": "Neo",
+        "age": 1
+    },   
+    {
+        "name": "Alice",
+        "age": 50,
+        "children": ["Selina","Rana","Charlie"]
+    },
+    {   "name": "Charlie",
+        "age": 17
+    }
+
+]
