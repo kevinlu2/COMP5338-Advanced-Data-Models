@@ -19,8 +19,8 @@ RETURN t.id, COUNT(t) AS OCURANCES
 ORDER BY OCURANCES DESC;
 
 // Question 4
-MATCH (t:tweets), (c:tweets) 
-WHERE (c)<-[:RETWEET|:REPLY]-(t)
+//MATCH (t:tweets), (c:tweets) 
+Match (c:tweets)<-[:RETWEET|:REPLY]-(t:tweets)
 RETURN t.id, COUNT(DISTINCT c.user_id) AS OCURANCES
 ORDER BY OCURANCES DESC
 LIMIT 1;

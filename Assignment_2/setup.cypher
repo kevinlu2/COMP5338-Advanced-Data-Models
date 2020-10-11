@@ -10,8 +10,7 @@ SET t.user_id = value.user_id,
 t.retweet_user_id = value.retweet_user_id,
 t.retweet_id = value.retweet_id,
 t.replyto_id =value.replyto_id,
-t.user_id = value.user_id,
-t.created_at = value.created_at
+t.user_id = value.user_id
 WITH t, value.hash_tags AS hash_tags
 UNWIND hash_tags AS ht
 SET t.hash_tags = ht.text
