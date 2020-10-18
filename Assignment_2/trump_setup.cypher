@@ -1,4 +1,8 @@
 
+//Kevin Lu
+//500403664
+//Assignment 2
+
 //CREATE INDEXES
 CREATE INDEX IF NOT EXISTS FOR (t:Tweets)
 ON (t.id);
@@ -22,7 +26,7 @@ t.retweet_id = value.retweet_id,
 t.replyto_id =value.replyto_id
 WITH t, value.hash_tags AS hash_tags
 UNWIND hash_tags AS ht
-CREATE(h:hash_tags {text:ht.text})
+CREATE(h:HashTags {text:ht.text})
 MERGE (h)-[:TAGGED]->(t);
 
 MATCH (a:Tweets),(b:Tweets)
@@ -57,5 +61,5 @@ MERGE (m)-[r:MENTION]->(t);
 //CREATE nodes that hold decendents
 MATCH (t:Tweets)<-[*]-(s:Tweets)
 WITH COLLECT(t.id) AS decendent, s.user_id AS user
-MERGE (a:decendents {user_id: user, ids: decendent});
+MERGE (a:Decedents {user_id: user, ids: decendent});
 

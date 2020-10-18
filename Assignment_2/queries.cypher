@@ -1,3 +1,7 @@
+//Kevin Lu
+//500403664
+//Assignment 2
+
 // Question 1
 MATCH (t:Tweets)
 WHERE NOT (t)-[*]->() AND
@@ -6,7 +10,7 @@ NOT EXISTS(t.replyto_id)
 RETURN count(t) AS Q1_results;
 
 // Question 2
-MATCH (h:hash_tags)-[:TAGGED]->(t:Tweets)
+MATCH (h:HashTags)-[:TAGGED]->(t:Tweets)
 WHERE NOT (t)<-[:RETWEET]-()
 RETURN h.text as Q2_tag, count(h.text) AS tag_count
 ORDER BY tag_count DESC
@@ -32,7 +36,7 @@ ORDER BY Q5_length DESC
 LIMIT 1;
 
 //Question 6
-MATCH (t:Tweets)<-[:MENTION]-(m:Mentions), (d:decendents)
+MATCH (t:Tweets)<-[:MENTION]-(m:Mentions), (d:Decendents)
 WHERE m.id = d.user_id AND NOT (t.id IN d.ids)
 RETURN m.id as user_id, count(m.id) AS mention_count
 order by mention_count DESC

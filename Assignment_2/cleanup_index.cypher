@@ -1,7 +1,12 @@
+//Kevin Lu
+//500403664
+//Assignment 2
+
 //drop graph
 MATCH (n)
 DETACH DELETE n;
 
+//DELETE RELATIONSHIPS
 match ()-[r]->() delete r;
 
 //DELETE INDEXES
