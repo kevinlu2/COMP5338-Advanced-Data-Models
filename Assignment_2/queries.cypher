@@ -36,7 +36,7 @@ ORDER BY Q5_length DESC
 LIMIT 1;
 
 //Question 6
-MATCH (t:Tweets)<-[:MENTION]-(m:Mentions), (d:Decendents)
+MATCH (t:Tweets)<-[:MENTION]-(m:Mentions), (d:Decedents)
 WHERE m.id = d.user_id AND NOT (t.id IN d.ids)
 RETURN m.id as user_id, count(m.id) AS mention_count
 order by mention_count DESC

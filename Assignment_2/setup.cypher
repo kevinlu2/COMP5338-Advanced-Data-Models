@@ -20,7 +20,7 @@ CREATE INDEX IF NOT EXISTS FOR (t:Tweets)
 ON (t.retweet_id);
 
 
-// Create DB
+// Create Database and Hash Tag with relationship to tweets
 CALL apoc.load.json("file:///tweets.json")
 YIELD value
 MERGE (t: Tweets {id: value.id})
@@ -54,7 +54,7 @@ WHERE EXISTS (t.retweet_id)
 MERGE (s:Tweets {id: t.retweet_id, user_id: t.retweet_user_id})
 MERGE (t)<-[r:RETWEET]-(s);
 
-//CREATE RELA MENTION
+// Create user mentions and relationship to tweets
 CALL apoc.load.json("file:///tweets.json")
 YIELD value
 MERGE (t:Tweets {id: value.id})
@@ -63,9 +63,9 @@ UNWIND value.user_mentions AS mn
 MERGE(m:Mentions{id:mn.id, parent_id:t.id})
 MERGE (m)-[r:MENTION]->(t);
 
-//CREATE nodes that hold decendents
+// Create nodes that hold decedents of tweets
 MATCH (t:Tweets)<-[*]-(s:Tweets)
-WITH COLLECT(t.id) AS decendent, s.user_id AS user
-MERGE (a:Decendents {user_id: user, ids: decendent});
+WITH COLLECT(t.id) AS decedents, s.user_id AS user
+MERGE (a: Decedents {user_id: user, ids: decedents});
 
 
