@@ -63,6 +63,16 @@ db.users.aggregate([
 ]).pretty()
 
 
+db.users.aggregate([
+  {$lookup: {
+      from: "users",
+      localField: "popularity",
+      foreignField: "popularity",
+      as: "correlatedQuery"
+    }}
+]).pretty()
+
+
 // db.tweets_v2.aggregate([
 //   { $lookup: {
 //       from: "users",
