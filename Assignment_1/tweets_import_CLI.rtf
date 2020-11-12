@@ -1,9 +1,57 @@
 {\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf600
-{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;}
+{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;\f1\fnil\fcharset0 HelveticaNeue;}
 {\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
 {\*\expandedcolortbl;;\cssrgb\c0\c1\c1;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\paperw11900\paperh16840\margl1440\margr1440\vieww28500\viewh9400\viewkind0
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
 
 \f0\fs22 \cf2 \CocoaLigature0 mongoimport --jsonArray --db a1 --collection tweets --file /Users/kevinlu/Documents/COMP5338/COMP5338-Advanced-Data-Models/Assignment_1/tweets.json\
-}
+\
+\
+\pard\pardeftab560\slleading20\partightenfactor0
+
+\f1\fs24 \cf0 \CocoaLigature1 mongoimport --ssl --host="docdb-2020-11-06-06-08-27.cluster-cpamfuogxql8.ap-southeast-2.docdb.amazonaws.com:27017" --collection=tweets --db=comp5338 --file=tweets.json --jsonArray --numInsertionWorkers 4 --username= --password= --sslCAFile rds-combined-ca-bundle.pem\
+\pard\pardeftab560\slleading20\pardirnatural\partightenfactor0
+\cf0 \
+\pard\pardeftab560\slleading20\partightenfactor0
+\cf0 mongoimport --ssl --host docdb-2020-11-12-07-01-04.cluster-c8eolqg5uwg6.us-east-2.docdb.amazonaws.com:27017 --collection=tweets --db=comp5338 --file=tweets.json --jsonArray --numInsertionWorkers 4 --username=demoDB --password=comp5338 \'97sslCAFile rds-combined-ca-bundle.pem \
+\
+\
+rs0:PRIMARY> db.users.aggregate([\
+...   \{$lookup: \{\
+...       from: "tweets",\
+...       let: \{\
+...         likes: "$popularity"\
+...       \},\
+...       pipeline: [\
+...         \{ $match: \{ $expr: \{ $eq: ["$retweet_count","$$likes"] \}\}\},\
+...         \{$limit: 2\}\
+...       ],\
+...       as: "uncorrelatedSubQuery"\
+...     \}\}\
+... ]).pretty()\
+assert: command failed: \{\
+        "ok" : 0,\
+        "code" : 304,\
+        "errmsg" : "Aggregation stage not supported: '$lookup on multiple join conditions and uncorrelated subquery'",\
+        "operationTime" : Timestamp(1605171196, 1)\
+\} : aggregate failed\
+_getErrorWithCode@src/mongo/shell/utils.js:25:13\
+doassert@src/mongo/shell/assert.js:16:14\
+assert.commandWorked@src/mongo/shell/assert.js:403:5\
+DB.prototype._runAggregate@src/mongo/shell/db.js:260:9\
+DBCollection.prototype.aggregate@src/mongo/shell/collection.js:1212:12\
+@(shell):1:1\
+\
+2020-11-12T08:53:16.902+0000 E QUERY    [thread1] Error: command failed: \{\
+        "ok" : 0,\
+        "code" : 304,\
+        "errmsg" : "Aggregation stage not supported: '$lookup on multiple join conditions and uncorrelated subquery'",\
+        "operationTime" : Timestamp(1605171196, 1)\
+\} : aggregate failed :\
+_getErrorWithCode@src/mongo/shell/utils.js:25:13\
+doassert@src/mongo/shell/assert.js:16:14\
+assert.commandWorked@src/mongo/shell/assert.js:403:5\
+DB.prototype._runAggregate@src/mongo/shell/db.js:260:9\
+DBCollection.prototype.aggregate@src/mongo/shell/collection.js:1212:12\
+@(shell):1:1}
